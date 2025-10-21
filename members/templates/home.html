@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {%load static%}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContestVibes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Poppins", sans-serif;
+            background: #1c1c1c;
+            color: #f1f1f1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #2a2a2a;
+            padding: 15px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.4);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: 1px;
+        }
+
+        .nav-buttons a {
+            color: white;
+            text-decoration: none;
+            background: #3a3a3a;
+            padding: 8px 16px;
+            margin-left: 10px;
+            border-radius: 8px;
+            transition: background 0.3s ease;
+        }
+
+        .nav-buttons a:hover {
+            background: #555;
+        }
+
+
+         .announcement-container {
+            display: flex; /* Establishes this as a flex container */
+            flex-direction: column; /* Stacks children vertically */
+            justify-content: center; /* Centers content vertically */
+            align-items: center; /* Centers content horizontally */
+            width: 100%; /* Ensures it covers the full width */
+            min-height: 100vh; /* Ensures it covers the full viewport height */
+            box-sizing: border-box;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Styling for the content box inside the flex container */
+        .content-box {
+            background-color: #1e1e1e;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            max-width: 800px; /* Limits width for better readability on large screens */
+            border: 1px solid #333;
+        }
+
+        /* Styling for the main paragraph */
+        .content-box p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            margin: 0;
+            color: #c5c5c5;
+        }
+
+        /* Styling for the "Login to continue" line */
+        .login-prompt {
+            margin-top: 30px;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+
+        .login-prompt a {
+            color: #4a90e2; /* A standout color for the link */
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .login-prompt a:hover {
+            color: #63a4ff; /* Lighter blue on hover */
+            text-decoration: underline;
+        }
+
+        .questions-widget-container {
+            width: 100%;
+            max-width: 800px;
+            background-color: #2c2c2c;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            height:5%;
+        }
+
+        .widget-header {
+            font-size: 22px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            color: #ffffff;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #444;
+        }
+
+        .question-row {
+            display: flex;
+            justify-content: space-between; /* Pushes items to opposite ends */
+            align-items: center;
+            padding: 18px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            background-color: #3a3a3a;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+
+        /* --- VERIFIED STATE --- */
+        /* This class is added by Django if the boolean is true */
+        .question-row.verified {
+            background-color: #2a4c3a; /* Light green background */
+            border-left: 4px solid #34d399; /* Green accent line */
+        }
+        
+        .question-row.verified .question-name {
+            color: #a7f3d0;
+        }
+
+        .question-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .question-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+        
+        .question-link {
+            font-size: 14px;
+            color: #60a5fa;
+            text-decoration: none;
+        }
+
+        .question-link:hover {
+            text-decoration: underline;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.2s ease-in-out;
+            border: 1px solid transparent; /* Base border */
+        }
+
+        /* --- NEW: Verified Green --- */
+        /* A classic "success" green button with white text. */
+        .btn.btn-verified-green {
+            color: white;
+            background-color: #22C55E; /* A modern, friendly green */
+            box-shadow: 0 4px 15px -5px rgba(34, 197, 94, 0.5);
+        }
+        .btn.btn-verified-green:hover {
+            background-color: #16A34A; /* A slightly darker green for hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px -5px rgba(34, 197, 94, 0.4);
+        }
+
+
+       .checkmark-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Use a responsive font-size as the base for scaling the elements within */
+            /* clamp(MIN, IDEAL, MAX) -> min size 8px, ideal 5% of viewport width, max 12px */
+            font-size: clamp(5px, 2.5vw, 6px);
+            gap: 2em; /* gap will now scale relative to the font-size */
+        }
+
+        /* The green circle */
+        .circle {
+            /* Use 'em' units to scale the circle relative to the container's font-size */
+            width: 2em;
+            height: 2em;
+            background-color: #4CAF50; /* A pleasant green */
+            border-radius: 50%; /* Makes the square a circle */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            box-shadow: 0 0.4em 1em rgba(0, 0, 0, 0.15);
+        }
+
+        /* The white tick/checkmark shape */
+        /* All dimensions are now in 'em' units to scale proportionally */
+        .tick {
+            width: 0.5em;
+            height: 1em;
+            border-style: solid;
+            border-color: white;
+            border-width: 0 0.4em 0.4em 0; /* Creates the 'L' shape */
+            transform: rotate(45deg); /* Rotates the 'L' to form a tick */
+            margin-top: -0.2em;
+        }
+
+        
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="logo">ContestVibes</div>
+        {% if not myvar %}
+        <div class="nav-buttons">
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        </div>
+        {% else %}
+         <div style="margin-left: auto; font-weight: 500; color: #f0f0f0; padding: 0 10px;">
+         Welcome, {{ myvar }}
+        </div>
+
+        {% endif %}
+    </div>
+
+    {% if not myvar %}
+
+    <div class="announcement-container">
+        <div class="content-box">
+            <p>
+                To empower aspiring developers and competitive programmers, Aventerprises is thrilled to launch a new initiative on its platform, ContestVibes. Every Monday, we will host a specially curated coding contest designed to sharpen your Data Structures and Algorithms (DSA) skills. Each contest will feature a set of handpicked problems from LeetCode, carefully selected to cover diverse topics and difficulty levels. This consistent, weekly challenge provides a structured environment for participants to practice under timed conditions, benchmark their progress, and systematically build the problem-solving abilities essential for acing technical interviews and excelling in the world of software engineering.
+            </p>
+            <div class="login-prompt">
+                <a href="#">Login to continue</a>
+            </div>
+        </div>
+    </div>
+    {%endif%}
+    {% if myvar %}
+    <div style="display: flex; justify-content: center;margin-top: 8%;">
+        <p style="font-size: 2.5em;" id=contest-status-line>Initializing...</p>
+    </div>
+       
+        {% if start %}
+        <div style="display: flex; justify-content: center;">
+        <div class="questions-widget-container">
+        <div class="widget-header">
+            <div>Contest Problems</div>
+            <form method="POST">
+               {% csrf_token %}
+             <button type="submit" name="verify" value="1" class="btn btn-verified-green">
+                Verify
+            </button>
+            </form>
+            
+        </div>
+
+        <!-- This is where the Django logic begins -->
+        
+        <!-- Question 1 -->
+        {% if contest.question_1 %}
+            <div class="question-row {% if verified_status.0 %}verified{% endif %}">
+                <div class="question-details">
+                    <span class="question-name">{{ contest.question_1 }}</span>
+                    <a href="{{ contest.question_1_link }}" target="_blank" class="question-link">View Problem</a>
+                </div>
+                {% if ques1 %}
+                <div class="circle">
+                    <div class="tick"></div>
+                </div>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Question 2 -->
+        {% if contest.question_2 %}
+            <div class="question-row {% if verified_status.1 %}verified{% endif %}">
+                <div class="question-details">
+                    <span class="question-name">{{ contest.question_2 }}</span>
+                    <a href="{{ contest.question_2_link }}" target="_blank" class="question-link">View Problem</a>
+                </div>
+                
+            </div>
+        {% endif %}
+
+        <!-- Question 3 -->
+        {% if contest.question_3 %}
+            <div class="question-row {% if verified_status.2 %}verified{% endif %}">
+                <div class="question-details">
+                    <span class="question-name">{{ contest.question_3 }}</span>
+                    <a href="{{ contest.question_3_link }}" target="_blank" class="question-link">View Problem</a>
+                </div>
+                
+            </div>
+        {% endif %}
+
+    </div>
+    </div>
+
+    {% endif %}
+
+
+
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- CONFIGURATION ---
+            // The start and end times are now passed from your Django view.
+            // We combine the separate date and time fields from your model to create a valid ISO string.
+            // This assumes your Django contest object is named `contest`.
+            const contestStartTime = new Date('{{ contest.date|date:"Y-m-d" }}T{{ contest.start_time|time:"H:i:s" }}');
+            const contestEndTime = new Date('{{ contest.date|date:"Y-m-d" }}T{{ contest.end_time|time:"H:i:s" }}');
+            // ---------------------
+
+            const statusLineEl = document.getElementById('contest-status-line');
+
+            const updateTimer = () => {
+                const now = new Date();
+
+                // 1. Check if contest is LIVE
+                if (now >= contestStartTime && now <= contestEndTime) {
+                    statusLineEl.textContent = 'Contest is LIVE';
+                    statusLineEl.className = 'live';
+                    return; // No need to check other conditions
+                }
+
+                // 2. Check if contest has ENDED
+                if (now > contestEndTime) {
+                    statusLineEl.textContent = 'Contest has ENDED';
+                    statusLineEl.className = 'ended';
+                    clearInterval(timerInterval); // Stop the script, it's over
+                    return;
+                }
+                
+                // 3. Otherwise, calculate COUNTDOWN
+                statusLineEl.className = ''; // Use default white color
+                const timeToStart = contestStartTime - now;
+
+                const days = Math.floor(timeToStart / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeToStart % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeToStart % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeToStart % (1000 * 60)) / 1000);
+
+                // Build the string dynamically
+                let countdownString = 'Contest starts in ';
+                if (days > 0) {
+                    countdownString += `${days}d `;
+                }
+                countdownString += `${String(hours).padStart(2, '0')}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+                
+                statusLineEl.textContent = countdownString;
+            };
+
+            // Run it once immediately, then every second
+            updateTimer();
+            const timerInterval = setInterval(updateTimer, 1000);
+        });
+    </script>
+
+
+    {% endif %}
+
+    
+
+
+
+
+</body>
+</html>
+
