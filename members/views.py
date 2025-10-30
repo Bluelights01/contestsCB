@@ -1,9 +1,12 @@
 from django.shortcuts import render,redirect
-from .models import Students,Contest,IsLogin
+from .models import Students,Contest,IsLogin,ContestLeaderboard
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from datetime import datetime
 import pytz
+import json
+from django.utils.dateparse import parse_date
+from django.core.serializers.json import DjangoJSONEncoder
 from . import fetch
 
 myvar=""
@@ -67,7 +70,27 @@ def home(request):
     contest = Contest.objects.filter(date=today_ist).first() 
     myvar=request.GET.get('leetcode_id')
     if(contest==None):
-        return render(request,'home.html',{'myvar':myvar,'start':None})
+        latest_date = ContestLeaderboard.objects.latest('contest_date').contest_date
+        
+        # Get all entries for that date
+        latest_entries = ContestLeaderboard.objects.filter(contest_date=latest_date)
+        data = list(latest_entries.values(
+            'contest_name', 
+            'user_name', 
+            'marks', 
+            'question1', 
+            'question2', 
+            'question3', 
+            'contest_date'
+        ))
+        entrylist_json = json.dumps(data, cls=DjangoJSONEncoder)
+        context = {
+        'myvar': myvar,
+        'start': None,
+        'entrylist_json': entrylist_json  # <-- Add this line
+        }
+        print(entrylist_json)
+        return render(request, 'home.html', context)
     curr_ti=now_ist.time()
     start=0
      
@@ -86,17 +109,32 @@ def home(request):
             marks=0
             if(ques1 in mylist):
                 ques1=1
+                marks+=100
             else:
                 ques1=0
             if(ques2 in mylist):
                 ques2=1
+                marks+=100
             else:
                 ques2=0
             if(ques3 in mylist):
+                marks+=100
                 ques3=1
             else:
                 ques3=0
-    
+            
+            entry=ContestLeaderboard.objects.update_or_create(
+            contest_name = contest.name,
+            user_name = myvar,
+            contest_date = today_ist,
+            defaults={
+                'marks':marks,
+                'question1':ques1,
+                'question2':ques2,
+                'question3':ques3,
+            }
+            )
+            
     if(curr_ti>=start_ti and curr_ti<=end_ti):
         start=1
 

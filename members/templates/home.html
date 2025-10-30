@@ -233,6 +233,14 @@
             margin-top: -0.2em;
         }
 
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in-row {
+            animation: fadeIn 0.3s ease-out;
+        }
         
     </style>
 </head>
@@ -310,7 +318,11 @@
                     <span class="question-name">{{ contest.question_2 }}</span>
                     <a href="{{ contest.question_2_link }}" target="_blank" class="question-link">View Problem</a>
                 </div>
-                
+                 {% if ques2 %}
+                <div class="circle">
+                    <div class="tick"></div>
+                </div>
+                {% endif %}
             </div>
         {% endif %}
 
@@ -321,7 +333,11 @@
                     <span class="question-name">{{ contest.question_3 }}</span>
                     <a href="{{ contest.question_3_link }}" target="_blank" class="question-link">View Problem</a>
                 </div>
-                
+                {% if ques1 %}
+                <div class="circle">
+                    <div class="tick"></div>
+                </div>
+                {% endif %}
             </div>
         {% endif %}
 
@@ -329,6 +345,213 @@
     </div>
 
     {% endif %}
+
+
+    
+    {% if not start %}
+
+
+    <div class="max-w-7xl mx-auto rounded-xl shadow-lg overflow-hidden w-full" style="background-color: #070707; color: #525252;">
+
+        
+        <div class="p-4 sm:p-6 text-white" style="background-color: #3a3939;">
+            <h1 id="contest-name" class="text-2xl sm:text-3xl font-bold">Contest Leaderboard</h1>
+            <p id="contest-date" class="text-sm text-gray-300 mt-1">Loading contest data...</p>
+        </div>
+
+        <!-- Leaderboard Table --><div class="overflow-x-auto">
+            <table class="w-full min-w-full divide-y divide-gray-700">
+                <thead class="bg-gray-700">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Rank</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">User</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-200 uppercase tracking-wider">Q1</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-200 uppercase tracking-wider">Q2</th>
+                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-200 uppercase tracking-wider">Q3</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-200 uppercase tracking-wider">Total Marks</th>
+                    </tr>
+                </thead>
+                <!-- Table body will be populated by JavaScript --><tbody id="leaderboard-body" class="bg-gray-600 divide-y divide-gray-700">
+                    <!-- Example row (will be cleared) --><tr>
+                        <td colspan="6" class="p-6 text-center text-gray-400">Loading entries...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Message for no entries --><div id="no-entries" class="hidden p-6 text-center text-gray-400">
+            No entries found for this contest.
+        </div>
+
+        <!-- Pagination Controls --><div id="pagination-controls" class="p-4 bg-gray-700 border-t border-gray-800 flex items-center justify-between">
+            <button id="prev-button" class="px-4 py-2 text-sm font-medium text-gray-200 bg-gray-500 border border-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                Previous
+            </button>
+            <span id="page-info" class="text-sm text-gray-200"></span>
+            <button id="next-button" class="px-4 py-2 text-sm font-medium text-gray-200 bg-gray-500 border border-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                Next
+            </button>
+        </div>
+    </div>
+
+    <!-- {{ entrylist_json|json_script:"entry-data" }} -->
+    <script id="mock-data">
+       const entryList = JSON.parse('{{ entrylist_json|escapejs }}');
+       console.log(entryList);
+       console.log(typeof entryList);
+       window.entryData = entryList;
+       window.mockEntryList=entryList;
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            let entryData = [];
+            
+            // Try to load data from Django's json_script
+            try {
+                const entryListElement = document.getElementById('entry-list-data');
+                if (entryListElement) {
+                    entryData = JSON.parse(entryListElement.textContent);
+                    // Remove the mock data script if Django data is found
+                    const mockDataEl = document.getElementById('mock-data');
+                    if (mockDataEl) mockDataEl.remove();
+                } else {
+                    console.warn('Could not find Django data ("entry-list-data"). Using mock data for demonstration.');
+                    entryData = window.mockEntryList || [];
+                }
+            } catch (e) {
+                console.error('Error parsing Django data. Using mock data.', e);
+                entryData = window.mockEntryList || [];
+            }
+
+            // --- LEADERBOARD LOGIC ---
+
+            // Sort data by marks (descending)
+            if (!Array.isArray(entryData)) {
+             entryData = Object.values(entryData);
+            }
+
+            // Sort data by marks (descending)
+            const sortedData = [...entryData].sort((a, b) => b.marks - a.marks);
+
+            // Get DOM elements
+            const tableBody = document.getElementById('leaderboard-body');
+            const contestNameEl = document.getElementById('contest-name');
+            const contestDateEl = document.getElementById('contest-date');
+            const prevButton = document.getElementById('prev-button');
+            const nextButton = document.getElementById('next-button');
+            const pageInfoEl = document.getElementById('page-info');
+            const noEntriesEl = document.getElementById('no-entries');
+            const paginationControlsEl = document.getElementById('pagination-controls');
+
+            let currentPage = 1;
+            const rowsPerPage = 10;
+            let pageCount = 0;
+
+            // SVG Icons for solved/unsolved
+            const checkIcon = `
+                <svg class="w-5 h-5 text-green-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>`;
+            const xIcon = `
+                <svg class="w-5 h-5 text-red-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>`;
+
+            // Function to display a specific page
+            function displayList(page) {
+                tableBody.innerHTML = ''; // Clear existing rows
+                page = page - 1; // Adjust for zero-based index
+
+                const start = rowsPerPage * page;
+                const end = start + rowsPerPage;
+                const paginatedItems = sortedData.slice(start, end);
+
+                paginatedItems.forEach((item, index) => {
+                    const rank = start + index + 1;
+                    const row = document.createElement('tr');
+                    // Add animation class
+                    row.classList.add('fade-in-row');
+                    
+                    row.innerHTML = `
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-100">${rank}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-200 font-medium">${item.user_name}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${item.question1 ? checkIcon : xIcon}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${item.question2 ? checkIcon : xIcon}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${item.question3 ? checkIcon : xIcon}</td>
+                        <td class="px-4 py-3 whitespace-nowrap text-sm font-semibold text-gray-100 text-right">${item.marks}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Function to update pagination buttons and text
+            function updateControls() {
+                pageInfoEl.textContent = `Page ${currentPage} of ${pageCount}`;
+                prevButton.disabled = currentPage === 1;
+                nextButton.disabled = currentPage === pageCount || pageCount === 0;
+            }
+
+            // Initialization function
+            function init() {
+                // Check if there is any data
+                if (sortedData.length === 0) {
+                    tableBody.innerHTML = ''; // Clear "Loading" message
+                    noEntriesEl.classList.remove('hidden'); // Show "No entries"
+                    paginationControlsEl.classList.add('hidden'); // Hide pagination
+                    // Still set a default title if no data
+                    contestNameEl.textContent = "Contest Leaderboard";
+                    contestDateEl.textContent = "No entries found";
+                    return;
+                }
+
+                // Set header info from the first entry
+                contestNameEl.textContent = sortedData[0].contest_name;
+                
+                // Format date nicely (e.g., "October 30, 2025")
+                // Add T00:00:00 to treat the date as local, avoiding timezone shifts
+                const date = new Date(sortedData[0].contest_date + 'T00:00:00'); 
+                contestDateEl.textContent = date.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                });
+
+                // Calculate total pages
+                pageCount = Math.ceil(sortedData.length / rowsPerPage);
+
+                // Initial display
+                displayList(currentPage);
+                updateControls();
+
+                // Event Listeners for buttons
+                prevButton.addEventListener('click', () => {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        displayList(currentPage);
+                        updateControls();
+                    }
+                });
+
+                nextButton.addEventListener('click', () => {
+                    if (currentPage < pageCount) {
+                        currentPage++;
+                        displayList(currentPage);
+                        updateControls();
+                    }
+                });
+            }
+
+            // Run the app
+            init();
+        });
+    </script>
+
+    {% endif %}
+
+
+
+
+
 
 
 

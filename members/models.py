@@ -40,9 +40,9 @@ class ContestLeaderboard(models.Model):
     user_name = models.CharField(max_length=100)
     marks = models.IntegerField(default=0)
     
-    question1_time = models.DurationField(null=True, blank=True)
-    question2_time = models.DurationField(null=True, blank=True)
-    question3_time = models.DurationField(null=True, blank=True)
+    question1 = models.BooleanField(default=False)
+    question2 = models.BooleanField(default=False)
+    question3 = models.BooleanField(default=False)
     
     contest_date = models.DateField()
 
